@@ -1,0 +1,40 @@
+# Environment variables (IMPORTANT: Never commit secrets!)
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build/
+dist/
+*.egg-info/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Test files
+test_*.py
+zoho_setup.py
+zoho_debug.py
+zoho_find_folders.py
+zoho_teamfolders.py
+test_download.py
+test_download2.py
+test_pattern.py
+test_match.py
+test_full_flow.py
+
+# Downloaded test files
+test_download_*.pdf
+
+# OS
+.DS_Store
+Thumbs.db
