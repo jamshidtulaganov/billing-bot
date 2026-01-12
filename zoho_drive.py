@@ -61,6 +61,9 @@ class ZohoWorkDrive:
 
     def download_file(self, file_id, local_path):
         """Download a file from Zoho WorkDrive"""
+        # Force refresh token to get fresh download URL
+        self._access_token = None
+
         # First get the file metadata to get the download URL
         metadata_url = f"{self.api_domain}/workdrive/api/v1/files/{file_id}"
         headers = self._get_headers()
@@ -73,7 +76,7 @@ class ZohoWorkDrive:
             metadata_response = requests.get(metadata_url, headers=headers)
 
         if metadata_response.status_code != 200:
-            raise Exception(f"Failed to get file metadata: {metadata_response.status_code}")
+            raise Exception(f"Failed to get file metadata: {metadata_response.status_code} - {metadata_response.text[:200]}")
 
         metadata = metadata_response.json()
         download_url = metadata['data']['attributes'].get('download_url')
@@ -83,7 +86,7 @@ class ZohoWorkDrive:
 
         # Now download the file using the download URL
         # Note: download_url is a pre-signed URL, don't send auth headers
-        response = requests.get(download_url, stream=True)
+        response = requests.get(download_url, stream=True, allow_redirects=True)
 
         if response.status_code == 200:
             with open(local_path, 'wb') as f:
@@ -91,14 +94,14 @@ class ZohoWorkDrive:
                     f.write(chunk)
             return True
         else:
-            # If failed, try with auth headers
-            response = requests.get(download_url, headers=headers, stream=True)
+            # If failed, try with auth headers as fallback
+            response = requests.get(download_url, headers=headers, stream=True, allow_redirects=True)
             if response.status_code == 200:
                 with open(local_path, 'wb') as f:
                     for chunk in response.iter_content(chunk_size=8192):
                         f.write(chunk)
                 return True
-            raise Exception(f"Failed to download file: {response.status_code}")
+            raise Exception(f"Failed to download file: {response.status_code} - {response.text[:200]}")
 
     def upload_file(self, folder_id, file_path):
         """Upload a file to Zoho WorkDrive"""
