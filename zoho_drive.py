@@ -82,12 +82,8 @@ class ZohoWorkDrive:
             raise Exception("No download_url found in file metadata")
 
         # Now download the file using the download URL
-        response = requests.get(download_url, headers=headers, stream=True)
-
-        if response.status_code == 401:  # Token expired
-            self.get_access_token()
-            headers = self._get_headers()
-            response = requests.get(download_url, headers=headers, stream=True)
+        # Note: download_url is a pre-signed URL, don't send auth headers
+        response = requests.get(download_url, stream=True)
 
         if response.status_code == 200:
             with open(local_path, 'wb') as f:
@@ -95,6 +91,13 @@ class ZohoWorkDrive:
                     f.write(chunk)
             return True
         else:
+            # If failed, try with auth headers
+            response = requests.get(download_url, headers=headers, stream=True)
+            if response.status_code == 200:
+                with open(local_path, 'wb') as f:
+                    for chunk in response.iter_content(chunk_size=8192):
+                        f.write(chunk)
+                return True
             raise Exception(f"Failed to download file: {response.status_code}")
 
     def upload_file(self, folder_id, file_path):
